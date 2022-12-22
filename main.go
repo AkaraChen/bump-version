@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -47,23 +48,25 @@ type Package struct {
 }
 
 func checkPnpmWorkspace() {
-	workspaceConfigDir := filepath.Join(currentPath, "pnpm-workspace.yaml")
-	__MONOREPO__ = fileExist(workspaceConfigDir)
-	workspaceConfigByte, _ := ioutil.ReadFile(workspaceConfigDir)
-	var workspaceConfig Workspace
-	err := yaml.Unmarshal(workspaceConfigByte, &workspaceConfig)
-	if err != nil {
-		pterm.Error.Printfln("Invalid workspace config.")
-		os.Exit(1)
-	}
-	if len(workspaceConfig.Packages) > 0 {
-		for _, value := range workspaceConfig.Packages {
-			packagesPattern := strings.Join([]string{currentPath, pathSeparator, value, pathSeparator, "**", pathSeparator, "package.json"}, "")
-			result, _ := zglob.Glob(packagesPattern)
-			packages = append(packages, result...)
+	configDir := filepath.Join(currentPath, "pnpm-workspace.yaml")
+	__MONOREPO__ = fileExist(configDir)
+	if __MONOREPO__ {
+		configByte, _ := ioutil.ReadFile(configDir)
+		var config Workspace
+		err := yaml.Unmarshal(configByte, &config)
+		if err != nil {
+			pterm.Error.Printfln("Invalid workspace config.")
+			os.Exit(1)
 		}
-	} else {
-		pterm.Warning.Printfln("Workspace config founded, but have no packages field.")
+		if len(config.Packages) > 0 {
+			for _, value := range config.Packages {
+				pattern := strings.Join([]string{currentPath, pathSeparator, value, pathSeparator, "**", pathSeparator, "package.json"}, "")
+				result, _ := zglob.Glob(pattern)
+				packages = append(packages, result...)
+			}
+		} else {
+			pterm.Warning.Printfln("Workspace config founded, but have no packages field.")
+		}
 	}
 }
 
@@ -71,9 +74,9 @@ func setup() {
 	if __DEV__ {
 		pterm.Info.Println("Currently in development mode.")
 		currentPath = filepath.Join(cwd, "test")
-		pterm.Info.Printfln("Current path: %s.", pterm.Blue(currentPath))
 	}
 
+	pterm.Info.Printfln("Current path: %s.", pterm.Blue(currentPath))
 	mainPackage = filepath.Join(currentPath, "package.json")
 	if !fileExist(mainPackage) {
 		pterm.Error.Printfln("Can't find package.json.")
@@ -82,12 +85,40 @@ func setup() {
 
 	packages = []string{mainPackage}
 	checkPnpmWorkspace()
+
 	if __DEV__ && __MONOREPO__ {
 		pterm.Info.Printfln("Monorepo founded.")
 		pterm.Info.Printfln("Find %s packages in workspace.", pterm.Blue(len(packages)))
 	}
 }
 
+func run(name string, args ...string) string {
+	cmd := exec.Command(name, args...)
+	cmd.Stderr = os.Stderr
+	output, err := cmd.Output()
+	if err != nil {
+		os.Exit(1)
+	}
+	return string(output)
+}
+
+func checkProgram(name string) {
+	_, err := exec.LookPath(name)
+	if err != nil {
+		pterm.Error.Printfln("%s not found in your environment.", name)
+		os.Exit(1)
+	}
+}
+
+func checkEnv() {
+	checkProgram("node")
+	checkProgram("npm")
+	checkProgram("git")
+	checkProgram("conventional-changelog")
+}
+
 func main() {
+	checkEnv()
 	setup()
+	fmt.Println(run("git", "status", "--porcelain"))
 }
