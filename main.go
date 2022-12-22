@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bump-version/pkg/structs"
+	"bump-version/pkg/util"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -40,10 +43,6 @@ var (
 
 type Workspace struct {
 	Packages []string `yaml:"packages"`
-}
-
-type Package struct {
-	Version int `json:"version"`
 }
 
 func checkPnpmWorkspace() {
@@ -116,9 +115,7 @@ func checkEnv() {
 	checkProgram("conventional-changelog")
 }
 
-func main() {
-	checkEnv()
-	setup()
+func checkGitStatus() {
 	if run("git", "status", "--porcelain") != "" && !__DEV__ {
 		pterm.Printfln("You have uncommited change, would you like to continue without commit?")
 		result, _ := pterm.DefaultInteractiveConfirm.Show()
@@ -126,4 +123,18 @@ func main() {
 			os.Exit(1)
 		}
 	}
+}
+
+func main() {
+	checkEnv()
+	setup()
+	checkGitStatus()
+	pkg := structs.GetPackage(mainPackage)
+	oldVersion := structs.ParseVersion(pkg.Version)
+	bumpType, _ := pterm.DefaultInteractiveSelect.
+		WithOptions(oldVersion.GetBumpedArray()).
+		Show("Select release type:")
+	selectIndex := util.FindIndex(oldVersion.GetBumpedArray(), bumpType)
+	newVersion := oldVersion.Bump(structs.VersionEnum(selectIndex))
+	fmt.Println(newVersion.ToString())
 }
