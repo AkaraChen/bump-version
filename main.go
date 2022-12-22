@@ -27,7 +27,7 @@ func fileExist(pattern string) bool {
 
 var (
 	execPath      = getExecAbsolutePath()
-	__DEV__       = strings.Contains(execPath, "Temp") || strings.Contains(execPath, "tmp")
+	__DEV__       = strings.Contains(execPath, "Temp") || strings.Contains(execPath, "tmp") || strings.Contains(execPath, "var/folders")
 	pathSeparator = string(os.PathSeparator)
 	cwd, _        = os.Getwd()
 	currentPath   = strings.Join([]string{cwd, pathSeparator}, "")
