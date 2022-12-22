@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bump-version/pkg/structs"
-	"bump-version/pkg/util"
+	"github.com/AkaraChen/bump-version/pkg/structs"
+	"github.com/AkaraChen/bump-version/pkg/util"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -139,10 +139,13 @@ func publish() {
 	publish.Run()
 }
 
-func main() {
+func init(){
 	checkEnv()
 	setup()
 	checkGitStatus()
+}
+
+func main() {
 	pkg := structs.GetPackage(mainPackage)
 	oldVersion := structs.ParseVersion(pkg.Version)
 	bumpType, _ := pterm.DefaultInteractiveSelect.
