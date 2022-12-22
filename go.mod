@@ -1,4 +1,4 @@
-module bump-version
+module github.com/AkaraChen/bump-version
 
 go 1.19
 
@@ -8,7 +8,6 @@ require (
 	github.com/pterm/pterm v0.12.50
 	github.com/tidwall/sjson v1.2.5
 	gopkg.in/yaml.v2 v2.2.8
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
