@@ -3,15 +3,19 @@ package main
 import (
 	"bump-version/pkg/structs"
 	"bump-version/pkg/util"
-	"fmt"
+	"io/fs"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
+	"github.com/tidwall/sjson"
 	"gopkg.in/yaml.v2"
 )
 
@@ -95,6 +99,7 @@ func run(name string, args ...string) string {
 	cmd.Stderr = os.Stderr
 	output, err := cmd.Output()
 	if err != nil {
+		log.Fatal(err)
 		os.Exit(1)
 	}
 	return string(output)
@@ -125,6 +130,15 @@ func checkGitStatus() {
 	}
 }
 
+func publish() {
+	publish := exec.Command("npm", "publish")
+	publish.Dir = currentPath
+	publish.Stdout = os.Stdout
+	publish.Stderr = os.Stderr
+	publish.Stdin = os.Stdin
+	publish.Run()
+}
+
 func main() {
 	checkEnv()
 	setup()
@@ -136,5 +150,28 @@ func main() {
 		Show("Select release type:")
 	selectIndex := util.FindIndex(oldVersion.GetBumpedArray(), bumpType)
 	newVersion := oldVersion.Bump(structs.VersionEnum(selectIndex))
-	fmt.Println(newVersion.ToString())
+	versionString := newVersion.ToString()
+	for _, file := range packages {
+		bytes, _ := ioutil.ReadFile(file)
+		result, _ := sjson.SetBytes(bytes, "version", versionString)
+		os.WriteFile(file, result, fs.ModeDevice)
+	}
+	pterm.Info.Printfln("Generate changelog...")
+	run("conventional-changelog", "-p angular -i CHANGELOG.md -s")
+	repo, err := git.PlainOpen(currentPath)
+	if err != nil {
+		pterm.Error.Printfln("Git repo not found in current dir.")
+	}
+	workTree, _ := repo.Worktree()
+	workTree.Add(".")
+	workTree.Commit("release: "+versionString, &git.CommitOptions{})
+	repo.CreateTag(versionString, plumbing.NewHash(versionString), &git.CreateTagOptions{})
+	pterm.Info.Printfln("Push your change...")
+	repo.Push(&git.PushOptions{})
+	confirmPublish, _ := pterm.
+		DefaultInteractiveConfirm.
+		Show("Would you like to publish to npm?")
+	if confirmPublish {
+		publish()
+	}
 }
