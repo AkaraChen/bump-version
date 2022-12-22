@@ -152,3 +152,4 @@ dist
 go.work
 
 test/.git/**
+bump-version
