@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -120,5 +119,7 @@ func checkEnv() {
 func main() {
 	checkEnv()
 	setup()
-	fmt.Println(run("git", "status", "--porcelain"))
+	if run("git", "status", "--porcelain") != "" {
+		pterm.Warning.Printfln("You have uncommited change.")
+	}
 }
