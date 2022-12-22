@@ -3,10 +3,12 @@ module bump-version
 go 1.19
 
 require (
+	github.com/go-git/go-git/v5 v5.5.1
 	github.com/mattn/go-zglob v0.0.4
 	github.com/pterm/pterm v0.12.50
 	github.com/tidwall/sjson v1.2.5
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -20,7 +22,6 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
-	github.com/go-git/go-git/v5 v5.5.1 // indirect
 	github.com/gookit/color v1.5.2 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
