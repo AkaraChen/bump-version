@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
+	"gopkg.in/yaml.v2"
 )
 
 func getExecAbsolutePath() string {
@@ -31,34 +33,61 @@ var (
 	pathSeparator = string(os.PathSeparator)
 	cwd, _        = os.Getwd()
 	currentPath   = strings.Join([]string{cwd, pathSeparator}, "")
+	__MONOREPO__  = false
+	mainPackage   string
+	packages      []string
 )
 
-func main() {
+type Workspace struct {
+	Packages []string `yaml:"packages"`
+}
+
+type Package struct {
+	Version int `json:"version"`
+}
+
+func checkPnpmWorkspace() {
+	workspaceConfigDir := filepath.Join(currentPath, "pnpm-workspace.yaml")
+	__MONOREPO__ = fileExist(workspaceConfigDir)
+	workspaceConfigByte, _ := ioutil.ReadFile(workspaceConfigDir)
+	var workspaceConfig Workspace
+	err := yaml.Unmarshal(workspaceConfigByte, &workspaceConfig)
+	if err != nil {
+		pterm.Error.Printfln("Invalid workspace config.")
+		os.Exit(1)
+	}
+	if len(workspaceConfig.Packages) > 0 {
+		for _, value := range workspaceConfig.Packages {
+			packagesPattern := strings.Join([]string{currentPath, pathSeparator, value, pathSeparator, "**", pathSeparator, "package.json"}, "")
+			result, _ := zglob.Glob(packagesPattern)
+			packages = append(packages, result...)
+		}
+	} else {
+		pterm.Warning.Printfln("Workspace config founded, but have no packages field.")
+	}
+}
+
+func setup() {
 	if __DEV__ {
 		pterm.Info.Println("Currently in development mode.")
-		currentPath = strings.Join([]string{currentPath, "test"}, "")
+		currentPath = filepath.Join(cwd, "test")
 		pterm.Info.Printfln("Current path: %s.", pterm.Blue(currentPath))
 	}
 
-	__MONOREPO__ := fileExist(strings.Join([]string{currentPath, pathSeparator, "pnpm-workspace.yaml"}, ""))
-
-	mainPackage := strings.Join([]string{currentPath, pathSeparator, "package.json"}, "")
+	mainPackage = filepath.Join(currentPath, "package.json")
 	if !fileExist(mainPackage) {
 		pterm.Error.Printfln("Can't find package.json.")
 		os.Exit(1)
 	}
 
-	packages := []string{mainPackage}
-	if __MONOREPO__ {
-		packagesPattern := strings.Join([]string{currentPath, pathSeparator, "**", pathSeparator, "package.json"}, "")
-		result, err := zglob.Glob(packagesPattern)
-		if err != nil || len(packages) == 0 {
-			pterm.Error.Printfln("Can't find packages.")
-		}
-		packages = result
-	}
+	packages = []string{mainPackage}
+	checkPnpmWorkspace()
 	if __DEV__ && __MONOREPO__ {
 		pterm.Info.Printfln("Monorepo founded.")
 		pterm.Info.Printfln("Find %s packages in workspace.", pterm.Blue(len(packages)))
 	}
+}
+
+func main() {
+	setup()
 }
