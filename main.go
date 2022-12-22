@@ -119,7 +119,11 @@ func checkEnv() {
 func main() {
 	checkEnv()
 	setup()
-	if run("git", "status", "--porcelain") != "" {
-		pterm.Warning.Printfln("You have uncommited change.")
+	if run("git", "status", "--porcelain") != "" && !__DEV__ {
+		pterm.Printfln("You have uncommited change, would you like to continue without commit?")
+		result, _ := pterm.DefaultInteractiveConfirm.Show()
+		if !result {
+			os.Exit(1)
+		}
 	}
 }
