@@ -12,6 +12,7 @@ import (
 	"github.com/AkaraChen/bump-version/pkg/util"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
 	"github.com/tidwall/sjson"
@@ -171,8 +172,7 @@ func main() {
 
 	pterm.Info.Printfln("Push your change...")
 	repo.Push(&git.PushOptions{})
-	head, _ := repo.Head()
-	repo.CreateTag(versionString, head.Hash(), &git.CreateTagOptions{
+	repo.CreateTag(versionString, plumbing.NewHash(versionString), &git.CreateTagOptions{
 		Message: versionString,
 	})
 	confirmPublish, _ := pterm.
