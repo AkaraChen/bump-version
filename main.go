@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/AkaraChen/bump-version/pkg/structs"
-	"github.com/AkaraChen/bump-version/pkg/util"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -11,8 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AkaraChen/bump-version/pkg/structs"
+	"github.com/AkaraChen/bump-version/pkg/util"
+
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
 	"github.com/tidwall/sjson"
@@ -97,6 +97,7 @@ func setup() {
 func run(name string, args ...string) string {
 	cmd := exec.Command(name, args...)
 	cmd.Stderr = os.Stderr
+	cmd.Dir = currentPath
 	output, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
@@ -139,7 +140,7 @@ func publish() {
 	publish.Run()
 }
 
-func init(){
+func init() {
 	checkEnv()
 	setup()
 	checkGitStatus()
@@ -160,17 +161,21 @@ func main() {
 		os.WriteFile(file, result, fs.ModeDevice)
 	}
 	pterm.Info.Printfln("Generate changelog...")
-	run("conventional-changelog", "-p angular -i CHANGELOG.md -s")
+	run("conventional-changelog", "-p", "angular", "-i", "CHANGELOG.md", "-s")
 	repo, err := git.PlainOpen(currentPath)
 	if err != nil {
 		pterm.Error.Printfln("Git repo not found in current dir.")
 	}
 	workTree, _ := repo.Worktree()
-	workTree.Add(".")
+	run("git", "add", ".")
 	workTree.Commit("release: "+versionString, &git.CommitOptions{})
-	repo.CreateTag(versionString, plumbing.NewHash(versionString), &git.CreateTagOptions{})
+
 	pterm.Info.Printfln("Push your change...")
 	repo.Push(&git.PushOptions{})
+	head, _ := repo.Head()
+	repo.CreateTag(versionString, head.Hash(), &git.CreateTagOptions{
+		Message: versionString,
+	})
 	confirmPublish, _ := pterm.
 		DefaultInteractiveConfirm.
 		Show("Would you like to publish to npm?")
