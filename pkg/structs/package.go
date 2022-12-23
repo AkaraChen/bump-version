@@ -2,7 +2,7 @@ package structs
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type Package struct {
@@ -11,7 +11,7 @@ type Package struct {
 }
 
 func GetPackage(file string) Package {
-	byte, _ := ioutil.ReadFile(file)
+	byte, _ := os.ReadFile(file)
 	var pkg Package
 	json.Unmarshal(byte, &pkg)
 	return pkg

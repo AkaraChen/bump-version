@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -53,7 +52,7 @@ func checkPnpmWorkspace() {
 	configDir := filepath.Join(currentPath, "pnpm-workspace.yaml")
 	__MONOREPO__ = fileExist(configDir)
 	if __MONOREPO__ {
-		configByte, _ := ioutil.ReadFile(configDir)
+		configByte, _ := os.ReadFile(configDir)
 		var config Workspace
 		err := yaml.Unmarshal(configByte, &config)
 		if err != nil {
@@ -156,7 +155,7 @@ func main() {
 	newVersion := oldVersion.Bump(structs.VersionEnum(selectIndex))
 	versionString := newVersion.ToString()
 	for _, file := range packages {
-		bytes, _ := ioutil.ReadFile(file)
+		bytes, _ := os.ReadFile(file)
 		result, _ := sjson.SetBytes(bytes, "version", versionString)
 		os.WriteFile(file, result, fs.ModeDevice)
 	}
