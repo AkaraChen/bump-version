@@ -11,8 +11,6 @@ import (
 	"github.com/AkaraChen/bump-version/pkg/structs"
 	"github.com/AkaraChen/bump-version/pkg/util"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
 	"github.com/tidwall/sjson"
@@ -161,20 +159,12 @@ func main() {
 		os.WriteFile(file, result, fs.ModeDevice)
 	}
 	pterm.Info.Printfln("Generate changelog...")
-	run("conventional-changelog", "-p", "angular", "-i", "CHANGELOG.md", "-s")
-	repo, err := git.PlainOpen(currentPath)
-	if err != nil {
-		pterm.Error.Printfln("Git repo not found in current dir.")
-	}
-	workTree, _ := repo.Worktree()
 	run("git", "add", ".")
-	workTree.Commit("release: "+versionString, &git.CommitOptions{})
-
+	run("git", "commit", "-m", "release: "+versionString)
 	pterm.Info.Printfln("Push your change...")
-	repo.Push(&git.PushOptions{})
-	repo.CreateTag(versionString, plumbing.NewHash(versionString), &git.CreateTagOptions{
-		Message: versionString,
-	})
+	run("git", "tag", versionString)
+	run("conventional-changelog", "-p", "angular", "-i", "CHANGELOG.md", "-s")
+	run("git", "push")
 	confirmPublish, _ := pterm.
 		DefaultInteractiveConfirm.
 		Show("Would you like to publish to npm?")
