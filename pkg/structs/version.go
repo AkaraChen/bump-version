@@ -43,10 +43,13 @@ func (version Version) Bump(bumpType VersionEnum) Version {
 	case Major:
 		{
 			version.major = version.major + 1
+			version.minor = 0
+			version.patch = 0
 		}
 	case Minor:
 		{
 			version.minor = version.minor + 1
+			version.patch = 0
 		}
 	case Patch:
 		{
