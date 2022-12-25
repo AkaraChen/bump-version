@@ -10,6 +10,7 @@ import (
 
 	"github.com/AkaraChen/bump-version/pkg/structs"
 	"github.com/AkaraChen/bump-version/pkg/util"
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/mattn/go-zglob"
 	"github.com/pterm/pterm"
@@ -95,6 +96,7 @@ func setup() {
 func run(name string, args ...string) string {
 	cmd := exec.Command(name, args...)
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 	cmd.Dir = currentPath
 	output, err := cmd.Output()
 	if err != nil {
@@ -121,21 +123,10 @@ func checkEnv() {
 
 func checkGitStatus() {
 	if run("git", "status", "--porcelain") != "" && !__DEV__ {
-		pterm.Printfln("You have uncommited change, would you like to continue without commit?")
-		result, _ := pterm.DefaultInteractiveConfirm.Show()
-		if !result {
+		if !confirm("You have uncommited change, would you like to continue without commit?") {
 			os.Exit(1)
 		}
 	}
-}
-
-func publish() {
-	publish := exec.Command("npm", "publish")
-	publish.Dir = currentPath
-	publish.Stdout = os.Stdout
-	publish.Stderr = os.Stderr
-	publish.Stdin = os.Stdin
-	publish.Run()
 }
 
 func init() {
@@ -144,15 +135,44 @@ func init() {
 	checkGitStatus()
 }
 
+func confirm(question string) bool {
+	result, _ := pterm.
+		DefaultInteractiveConfirm.
+		Show(question)
+	return result
+}
+
+func GetBumpedArray(version semver.Version) []string {
+	major := version.IncMajor()
+	minor := version.IncMinor()
+	patch := version.IncPatch()
+	return []string{"Major " + major.Original(), "Minor " + minor.Original(), "Patch " + patch.Original()}
+}
+
 func main() {
 	pkg := structs.GetPackage(mainPackage)
-	oldVersion := structs.ParseVersion(pkg.Version)
+	oldVersion, _ := semver.NewVersion(pkg.Version)
+	versionArr := GetBumpedArray(*oldVersion)
 	bumpType, _ := pterm.DefaultInteractiveSelect.
-		WithOptions(oldVersion.GetBumpedArray()).
+		WithOptions(GetBumpedArray(*oldVersion)).
 		Show("Select release type:")
-	selectIndex := util.FindIndex(oldVersion.GetBumpedArray(), bumpType)
-	newVersion := oldVersion.Bump(structs.VersionEnum(selectIndex))
-	versionString := newVersion.ToString()
+	selectIndex := util.FindIndex(versionArr, bumpType)
+	newVersion := *oldVersion
+	switch selectIndex {
+	case 0:
+		{
+			newVersion = newVersion.IncMajor()
+		}
+	case 1:
+		{
+			newVersion = newVersion.IncMinor()
+		}
+	case 2:
+		{
+			newVersion = newVersion.IncPatch()
+		}
+	}
+	versionString := newVersion.Original()
 	for _, file := range packages {
 		bytes, _ := os.ReadFile(file)
 		result, _ := sjson.SetBytes(bytes, "version", versionString)
@@ -165,10 +185,7 @@ func main() {
 	run("git", "tag", versionString)
 	pterm.Info.Printfln("Push your change...")
 	run("git", "push")
-	confirmPublish, _ := pterm.
-		DefaultInteractiveConfirm.
-		Show("Would you like to publish to npm?")
-	if confirmPublish {
-		publish()
+	if confirm("Would you like to publish to npm?") {
+		run("npm", "publish")
 	}
 }
