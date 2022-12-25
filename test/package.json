@@ -1,11 +1,11 @@
 {
   "name": "test",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo \"Build Script running\""
+    "build": "touch test"
   },
   "keywords": [],
   "author": "",
