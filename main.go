@@ -172,14 +172,17 @@ func main() {
 		result, _ := sjson.SetBytes(bytes, "version", versionString)
 		os.WriteFile(file, result, fs.ModeDevice)
 	}
-	pterm.Info.Printfln("Generate changelog...")
-	run("conventional-changelog", "-p", "angular", "-i", "CHANGELOG.md", "-s")
-	run("git", "add", ".")
-	run("git", "commit", "-m", "release: "+versionString)
-	run("git", "tag", versionString)
-	pterm.Info.Printfln("Push your change...")
-	run("git", "push")
-	if confirm("Would you like to publish to npm?") {
-		run("npm", "publish")
+	if !__DEV__ {
+		pterm.Info.Printfln("Generate changelog...")
+		run("conventional-changelog", "-p", "angular", "-i", "CHANGELOG.md", "-s")
+		run("git", "add", ".")
+		run("git", "commit", "-m", "release: "+versionString)
+		run("git", "tag", versionString)
+		pterm.Info.Printfln("Push your change...")
+		run("git", "push")
+		if confirm("Would you like to publish to npm?") {
+			run("npm", "publish")
+		}
 	}
+
 }
