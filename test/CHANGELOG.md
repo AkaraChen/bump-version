@@ -1,3 +1,12 @@
+## [5.23.6](https://github.com/AkaraChen/bump-version/compare/5.23.3...5.23.6) (2022-12-25)
+
+
+### Bug Fixes
+
+* typo ([18ffc16](https://github.com/AkaraChen/bump-version/commit/18ffc16cc0308a48a80566c5bd540c3e68b82b76))
+
+
+
 ## [5.23.3](https://github.com/AkaraChen/bump-version/compare/5.23.2...5.23.3) (2022-12-25)
 
 
