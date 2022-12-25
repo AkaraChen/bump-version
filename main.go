@@ -154,11 +154,10 @@ func main() {
 	oldVersion, _ := semver.NewVersion(pkg.Version)
 	versionArr := GetBumpedArray(*oldVersion)
 	bumpType, _ := pterm.DefaultInteractiveSelect.
-		WithOptions(GetBumpedArray(*oldVersion)).
+		WithOptions(versionArr).
 		Show("Select release type:")
-	selectIndex := util.FindIndex(versionArr, bumpType)
 	newVersion := *oldVersion
-	switch selectIndex {
+	switch util.FindIndex(versionArr, bumpType) {
 	case 0:
 		newVersion = newVersion.IncMajor()
 	case 1:
