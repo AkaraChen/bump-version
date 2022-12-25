@@ -160,17 +160,11 @@ func main() {
 	newVersion := *oldVersion
 	switch selectIndex {
 	case 0:
-		{
-			newVersion = newVersion.IncMajor()
-		}
+		newVersion = newVersion.IncMajor()
 	case 1:
-		{
-			newVersion = newVersion.IncMinor()
-		}
+		newVersion = newVersion.IncMinor()
 	case 2:
-		{
-			newVersion = newVersion.IncPatch()
-		}
+		newVersion = newVersion.IncPatch()
 	}
 	versionString := newVersion.Original()
 	for _, file := range packages {
