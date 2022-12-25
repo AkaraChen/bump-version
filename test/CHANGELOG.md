@@ -1,3 +1,7 @@
+## [5.23.3](https://github.com/AkaraChen/bump-version/compare/5.23.2...5.23.3) (2022-12-25)
+
+
+
 ## [5.23.2](https://github.com/AkaraChen/bump-version/compare/2.2.0...5.23.2) (2022-12-25)
 
 
