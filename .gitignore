@@ -153,3 +153,4 @@ go.work
 
 test/.git/**
 bump-version
+.DS_Store
