@@ -3,6 +3,7 @@ package main
 import (
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -85,7 +86,12 @@ func main() {
 	pterm.Info.Printfln("Push your change...")
 	run("git", "push")
 	if config.Publish && confirm("Would you like to publish to npm?") {
-		run("npm", "publish")
+		cmd := exec.Command("npm", "publish")
+		cmd.Stdin = os.Stdin
+		cmd.Dir = currentPath
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
 	}
 
 }
