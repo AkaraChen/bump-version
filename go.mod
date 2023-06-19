@@ -3,7 +3,7 @@ module github.com/AkaraChen/bump-version
 go 1.19
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.0
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/mattn/go-zglob v0.0.4
 	github.com/pterm/pterm v0.12.56
 	github.com/tidwall/sjson v1.2.5
